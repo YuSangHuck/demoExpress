@@ -34,14 +34,26 @@ server.on('listening', onListening);
  * socket.io lib
  */
 const io = require('socket.io')(server);
-io.on('connection', client => {
+let connectedUserList = []
+let typingUserList = []
+io.on('connection', ws => {
   console.log('---a user connected---');
-  // console.log(client)
-  // console.log(JSON.stringify(client, null, 2))
-  client.on('event', data => { /* … */ });
-  client.on('disconnect', () => {
+  console.log(ws.id)
+  connectedUserList.push(ws.id)
+  io.emit('user list', connectedUserList);
+  ws.on('disconnect', (reason) => {
     console.log('---a user disconnected---')
+    console.log(reason)
+    console.log(ws.id)
+    connectedUserList.splice(connectedUserList.findIndex(connectedUser => connectedUser === ws.id), 1)
+    io.emit('user list', connectedUserList);
   });
+  ws.on('chat message', (wsMsg) => {
+    io.emit('chat message', wsMsg);
+  });
+  ws.on('error', (error) => {
+    console.error(error)
+  })
 });
 
 /**
